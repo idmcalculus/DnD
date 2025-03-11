@@ -148,12 +148,15 @@ export class DragManager {
   createPlaceholder() {
     this.placeholder = document.createElement('div');
     this.placeholder.className = 'drop-placeholder';
-    this.placeholder.style.height = `${this.itemHeight}px`;
+    // Use a smaller height for a more subtle indicator
+    this.placeholder.style.height = '8px';
     this.placeholder.style.display = 'none'; // Initially hidden
     this.placeholder.style.animation = 'pulse 1.5s infinite';
-    this.placeholder.style.backgroundColor = 'rgba(0, 120, 215, 0.2)';
+    this.placeholder.style.backgroundColor = 'rgba(0, 120, 215, 0.1)';
     this.placeholder.style.borderRadius = '4px';
-    this.placeholder.style.border = '2px dashed rgba(0, 120, 215, 0.5)';
+    this.placeholder.style.border = '1px dashed rgba(0, 120, 215, 0.3)';
+    this.placeholder.style.marginTop = '2px';
+    this.placeholder.style.marginBottom = '2px';
   }
   
   /**
@@ -273,10 +276,25 @@ export class DragManager {
     
     const rect = dropList.getBoundingClientRect();
     const relativeY = e.clientY - rect.top;
-    const newIndex = Math.floor(relativeY / this.itemHeight);
     
-    // If index changed, update placeholder position
+    // Calculate index with a buffer zone to reduce sensitivity
+    // This helps prevent rapid index changes when moving near the boundary between items
+    const rawIndex = relativeY / this.itemHeight;
+    const newIndex = Math.floor(rawIndex);
+    
+    // Only update if the index has changed - this prevents unnecessary animations
     if (newIndex !== this.placeholderIndex) {
+      // Debounce rapid changes by checking if we're very close to the boundary
+      const fractionalPart = rawIndex - newIndex;
+      const isNearBoundary = fractionalPart < 0.15 || fractionalPart > 0.85;
+      
+      // If we're near a boundary and the last update was recent, skip this update
+      const now = Date.now();
+      if (isNearBoundary && this._lastPlaceholderUpdate && now - this._lastPlaceholderUpdate < 100) {
+        return;
+      }
+      this._lastPlaceholderUpdate = now;
+      
       // Calculate actual visual position accounting for visible items
       this.removePlaceholder();
       
@@ -307,9 +325,6 @@ export class DragManager {
       // Show placeholder
       this.placeholder.style.display = 'block';
       
-      // Animate items that need to move
-      this.animateItemsForPlaceholder(dropList, newIndex);
-      
       // Insert placeholder
       if (insertBefore) {
         dropList.insertBefore(this.placeholder, insertBefore);
@@ -327,58 +342,9 @@ export class DragManager {
    * @param {number} placeholderIndex - The index where the placeholder will be inserted
    */
   animateItemsForPlaceholder(dropList, placeholderIndex) {
-    if (!dropList || !this.dragActive || !this.draggedItem) return;
-    
-    let items = [];
-    try {
-      items = Array.from(dropList.querySelectorAll('.draggable-item') || []);
-    } catch (err) {
-      console.error('Error getting items for animation:', err);
-      return; // Exit if we can't get items
-    }
-    
-    // Filter out the dragged item and null items
-    const visibleItems = items.filter(item => item && item !== this.draggedItem);
-    
-    // Reset all animations
-    visibleItems.forEach(item => {
-      item.classList.remove('item-moving-up', 'item-moving-down');
-    });
-    
-    visibleItems.forEach((item, index) => {
-      // Get the actual scroll container to determine visibility
-      const scrollContainer = dropList.closest('.virtual-scroll-container');
-      const scrollRect = scrollContainer ? scrollContainer.getBoundingClientRect() : null;
-      const itemRect = item.getBoundingClientRect();
-      
-      // Only animate items that are visible or just outside the viewport
-      const isItemVisible = !scrollRect || (
-        itemRect.bottom >= scrollRect.top - 100 && 
-        itemRect.top <= scrollRect.bottom + 100
-      );
-      
-      if (!isItemVisible) {
-        return; // Skip animation for items not in view
-      }
-      
-      // Animate items based on their position relative to the placeholder
-      if (index < placeholderIndex) {
-        // Only animate items close to the insertion point for better UX
-        if (placeholderIndex - index <= 5) {
-          item.classList.add('item-moving-up');
-        }
-      } else {
-        // Items below the placeholder move down with more pronounced animation
-        if (index - placeholderIndex <= 5) {
-          item.classList.add('item-moving-down');
-        }
-      }
-      
-      // Apply a transition delay based on distance from placeholder for cascade effect
-      const distance = Math.abs(index - placeholderIndex);
-      const delay = Math.min(distance * 0.02, 0.1); // Max 100ms delay
-      item.style.transitionDelay = `${delay}s`;
-    });
+    // Animation implementation has been removed
+    // This method is kept as a placeholder for future implementation
+    return;
   }
   
   /**
@@ -407,18 +373,19 @@ export class DragManager {
       const y = e.clientY - this.offsetY;
       
       // Add a slight rotation effect based on movement direction for more natural feel
-      const rotationFactor = 0.5; // Subtle rotation
+      // Reduced rotation factor for more subtle movement
+      const rotationFactor = 0.3; 
       const movementX = e.movementX || 0;
       const rotation = movementX * rotationFactor;
       
-      // Limit rotation to a small range
-      const clampedRotation = Math.max(-3, Math.min(3, rotation));
+      // Limit rotation to a smaller range for subtlety
+      const clampedRotation = Math.max(-2, Math.min(2, rotation));
       
-      // Position the clone directly at the cursor position
-      this.clone.style.position = 'fixed'; // Use fixed positioning to follow cursor
+      // Position the clone directly at the cursor position with smoother transform
+      this.clone.style.position = 'fixed';
       this.clone.style.left = `${x}px`;
       this.clone.style.top = `${y}px`;
-      this.clone.style.transform = `scale(1.05) rotate(${clampedRotation}deg) translateY(-5px)`;
+      this.clone.style.transform = `scale(1.03) rotate(${clampedRotation}deg) translateY(-3px)`;
     }
   }
   

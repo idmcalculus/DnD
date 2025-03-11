@@ -168,12 +168,15 @@ body {
 
 /* Placeholder styling */
 .drop-placeholder {
-	background-color: rgba(0, 120, 215, 0.2);
-	border: 2px dashed rgba(0, 120, 215, 0.5);
+	background-color: rgba(0, 120, 215, 0.1);
+	border: 1px dashed rgba(0, 120, 215, 0.3);
 	border-radius: 4px;
 	margin: 4px;
 	width: calc(100% - 8px);
 	animation: pulse 1.5s infinite;
+	height: 8px !important; /* Even smaller height for a more subtle indicator */
+	margin-top: 2px;
+	margin-bottom: 2px;
 }
 
 .draggable-item {
@@ -183,7 +186,7 @@ body {
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 	cursor: grab;
 	user-select: none; /* Prevent accidental text selection on drag */
-	transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease; /* Faster transitions */
+	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, opacity 0.2s ease; /* Smoother transitions */
 	width: calc(100% - 8px);
 	height: 44px; /* Fixed height for better virtualization */
 	overflow: hidden;
@@ -210,16 +213,7 @@ body {
 	border-color: rgba(0, 121, 191, 0.2);
 }
 
-/* Animation for items moving up/down */
-.item-moving-up {
-	transform: translateY(-100%) !important;
-	transition: transform 0.3s ease !important;
-}
-
-.item-moving-down {
-	transform: translateY(100%) !important;
-	transition: transform 0.3s ease !important;
-}
+/* Animation styles for moving items have been removed */
 
 .item-inserted {
 	animation: highlight-item 1s ease;
@@ -305,25 +299,7 @@ body {
 	}
 }
 
-/* Animation for items moving to make space (upward) */
-@keyframes moveUp {
-	0% {
-		transform: translateY(0);
-	}
-	100% {
-		transform: translateY(-4px);
-	}
-}
-
-/* Animation for items moving to make space (downward) */
-@keyframes moveDown {
-	0% {
-		transform: translateY(0);
-	}
-	100% {
-		transform: translateY(4px);
-	}
-}
+/* Keyframe animations for moving items have been removed */
 
 /* Animation for item insertion */
 @keyframes insertItem {
